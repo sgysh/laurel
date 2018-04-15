@@ -1,0 +1,7 @@
+[package]
+name = "laurel"
+version = "0.1.0"
+authors = ["y-sugino <ysgn0101@gmail.com>"]
+
+[dependencies]
+compiler_builtins = { git = "https://github.com/rust-lang-nursery/compiler-builtins" }
