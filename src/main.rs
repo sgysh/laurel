@@ -20,9 +20,10 @@ mod util;
 mod heap_allocator;
 mod uart;
 mod chunk;
+mod console;
 
 #[used]
-static mut HEAP: [u8 ; 64] = [0xcc; 64];
+static mut HEAP: [u8 ; 256] = [0xcc; 256];
 
 #[global_allocator]
 static mut HEAP_ALLOCATOR: heap_allocator::MyAllocator = heap_allocator::MyAllocator::empty();
@@ -133,4 +134,21 @@ unsafe fn init_bss() {
     for x in 0..n {
         core::ptr::write_volatile(((&_sbss as *const u32).offset(x as isize)) as *mut _, 0);
     }
+}
+
+#[no_mangle]
+pub unsafe extern fn memcmp(s1: *const u8, s2: *const u8, len: usize) -> i32 {
+    for i in 0.. {
+        if i >= len {break;}
+
+        let a = *s1.offset(i as isize);
+        let b = *s2.offset(i as isize);
+
+        let res = a as i32 - b as i32;
+        if res != 0 {
+            return res
+        }
+    }
+
+    0
 }

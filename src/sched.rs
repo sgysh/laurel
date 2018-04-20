@@ -1,6 +1,6 @@
 use util;
 use kernel;
-use uart;
+use console;
 
 #[used]
 static mut JIFFIES: u32 = 0xffff_ff00;
@@ -8,7 +8,7 @@ static mut JIFFIES: u32 = 0xffff_ff00;
 #[used]
 static mut KERNEL_STACK: [u32 ; 512] = [0xdeadbeef; 512];
 #[used]
-static mut CONSOLE_STACK: [u32 ; 256] = [0xeeeeeeee; 256];
+static mut CONSOLE_STACK: [u32 ; 1024] = [0xeeeeeeee; 1024];
 
 
 struct Tcb {
@@ -43,9 +43,9 @@ pub unsafe fn task_init() {
         :
     );
 
-    CONSOLE_STACK[CONSOLE_STACK.len() - 1] = 0x01000000;                                            /* xPSR  */
-    CONSOLE_STACK[CONSOLE_STACK.len() - 2] = util::align_down(console_handler as usize, 2) as u32;  /* PC */
-    CONSOLE_STACK[CONSOLE_STACK.len() - 3] = util::align_down(task_finished as usize, 2) as u32;    /* LR */
+    CONSOLE_STACK[CONSOLE_STACK.len() - 1] = 0x01000000;                                                     /* xPSR  */
+    CONSOLE_STACK[CONSOLE_STACK.len() - 2] = util::align_down(console::console_handler as usize, 2) as u32;  /* PC */
+    CONSOLE_STACK[CONSOLE_STACK.len() - 3] = util::align_down(task_finished as usize, 2) as u32;             /* LR */
 
     TCBS[1].sp = CONSOLE_STACK.as_ptr().offset(CONSOLE_STACK.len() as isize - 16) as *mut u32;
 }
@@ -113,22 +113,6 @@ pub unsafe fn task_switch() {
      *   Writing 1 to this bit is the only way to set the PendSV exception state to pending.
      */
     util::write_or(0xe000ed04 as *mut u32, 1 << 28);
-}
-
-fn console_handler() {
-    loop {
-        unsafe {
-            while !uart::is_readable() {
-                task_switch();
-            }
-            let val = uart::read();
-
-            while !uart::is_writeable() {
-                task_switch();
-            }
-            uart::write(val);
-        }
-    }
 }
 
 fn task_finished() {
