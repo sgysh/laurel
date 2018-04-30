@@ -1,14 +1,4 @@
 [[package]]
-name = "compiler_builtins"
-version = "0.1.0"
-source = "git+https://github.com/rust-lang-nursery/compiler-builtins#cb04a0718b2437a32436d4cc2eb66d012066c835"
-
-[[package]]
 name = "laurel"
 version = "0.1.0"
-dependencies = [
- "compiler_builtins 0.1.0 (git+https://github.com/rust-lang-nursery/compiler-builtins)",
-]
 
-[metadata]
-"checksum compiler_builtins 0.1.0 (git+https://github.com/rust-lang-nursery/compiler-builtins)" = "<none>"

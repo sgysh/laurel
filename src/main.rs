@@ -1,6 +1,5 @@
 #![feature(used)]
 #![feature(lang_items)]
-#![feature(compiler_builtins_lib)]
 #![feature(asm)]
 #![feature(const_fn)]
 #![feature(naked_functions)]
@@ -11,7 +10,6 @@
 #![no_std]
 #![no_main]
 
-extern crate compiler_builtins;
 extern crate alloc;
 
 mod kernel;
