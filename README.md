@@ -25,13 +25,6 @@ MIT
 
     rustup install nightly
 
-## Set to use nightly
-
-    cd PATH_TO_PROJECT_DIRECTORY
-    rustup override set nightly
-
-This setting is written in ~/.rustup/settings.toml
-
 ## Use UART
 
     e.g.) picocom -b 115200 /dev/pts/28
