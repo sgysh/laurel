@@ -29,8 +29,8 @@ impl ChunkHeader {
     pub unsafe fn add(&mut self, request_size: usize) -> Option<*mut u8> {
         let mut prev_head_ptr = self as *mut ChunkHeader;
         if self.next.is_none() {
-            return None;
-        } // no free chunk
+            return None; // no free chunk;
+        }
         let mut head_ptr = self.next.unwrap() as *mut ChunkHeader;
         loop {
             //
