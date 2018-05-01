@@ -1,6 +1,6 @@
+use alloc::vec_deque::VecDeque;
 use sched;
 use uart;
-use alloc::vec_deque::VecDeque;
 
 pub fn console_handler() {
     let mut buffer: VecDeque<u32> = VecDeque::with_capacity(10);

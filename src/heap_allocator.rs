@@ -1,7 +1,7 @@
 use alloc::heap::{Alloc, AllocErr, Layout};
 
-use core;
 use chunk;
+use core;
 use util;
 
 pub struct MyAllocator {
@@ -20,7 +20,9 @@ impl MyAllocator {
     }
 
     pub const fn new() -> MyAllocator {
-        MyAllocator {head: core::cell::RefCell::new(chunk::ChunkHeader::empty())}
+        MyAllocator {
+            head: core::cell::RefCell::new(chunk::ChunkHeader::empty()),
+        }
     }
 }
 
@@ -36,7 +38,7 @@ unsafe impl<'a> Alloc for &'a MyAllocator {
             return Ok(alloc_start.unwrap() as *mut u8);
         } else {
             debug_assert!(false);
-            return Err(AllocErr::Exhausted{request: layout})
+            return Err(AllocErr::Exhausted { request: layout });
         }
     }
 

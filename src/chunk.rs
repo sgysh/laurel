@@ -2,8 +2,8 @@ use core;
 
 #[repr(C)]
 pub struct ChunkHeader {
-    next : Option<usize>,
-    chunk_size : usize,
+    next: Option<usize>,
+    chunk_size: usize,
 }
 
 impl ChunkHeader {
@@ -28,7 +28,9 @@ impl ChunkHeader {
 
     pub unsafe fn add(&mut self, request_size: usize) -> Option<*mut u8> {
         let mut prev_head_ptr = self as *mut ChunkHeader;
-        if self.next.is_none() {return None;}  // no free chunk
+        if self.next.is_none() {
+            return None;
+        } // no free chunk
         let mut head_ptr = self.next.unwrap() as *mut ChunkHeader;
         loop {
             //
@@ -46,18 +48,23 @@ impl ChunkHeader {
                 //
                 let new_chunk_head = ChunkHeader {
                     next: (*head_ptr).next,
-                    chunk_size: (*head_ptr).chunk_size - request_size - core::mem::size_of::<ChunkHeader>(),
+                    chunk_size: (*head_ptr).chunk_size - request_size
+                        - core::mem::size_of::<ChunkHeader>(),
                 };
                 let prev_chunk_head = ChunkHeader {
-                    next: Some(head_ptr as usize + request_size + core::mem::size_of::<ChunkHeader>()),
+                    next: Some(
+                        head_ptr as usize + request_size + core::mem::size_of::<ChunkHeader>(),
+                    ),
                     chunk_size: (*prev_head_ptr).chunk_size,
                 };
                 let use_chunk_head = ChunkHeader {
-                    next: None,  // unused field
+                    next: None, // unused field
                     chunk_size: request_size + core::mem::size_of::<ChunkHeader>(),
                 };
                 prev_head_ptr.write(prev_chunk_head);
-                ((head_ptr as usize + request_size + core::mem::size_of::<ChunkHeader>()) as *mut ChunkHeader).write(new_chunk_head);
+                ((head_ptr as usize + request_size + core::mem::size_of::<ChunkHeader>())
+                    as *mut ChunkHeader)
+                    .write(new_chunk_head);
                 head_ptr.write(use_chunk_head);
                 break;
             } else if request_size + core::mem::size_of::<ChunkHeader>() <= (*head_ptr).chunk_size {
@@ -69,21 +76,26 @@ impl ChunkHeader {
                     chunk_size: (*prev_head_ptr).chunk_size,
                 };
                 let use_chunk_head = ChunkHeader {
-                    next: None,  // unused field
-                    chunk_size: (*head_ptr).chunk_size,  // include dummy space
+                    next: None,                         // unused field
+                    chunk_size: (*head_ptr).chunk_size, // include dummy space
                 };
                 prev_head_ptr.write(prev_chunk_head);
                 head_ptr.write(use_chunk_head);
                 break;
             }
 
-            if (*head_ptr).next.is_none() {return None;}
+            if (*head_ptr).next.is_none() {
+                return None;
+            }
 
             prev_head_ptr = head_ptr;
             head_ptr = (*head_ptr).next.unwrap() as *mut ChunkHeader;
         }
 
-        Some(((head_ptr as usize + core::mem::size_of::<ChunkHeader>()) as *mut ChunkHeader) as *mut u8)
+        Some(
+            ((head_ptr as usize + core::mem::size_of::<ChunkHeader>()) as *mut ChunkHeader)
+                as *mut u8,
+        )
     }
 
     pub unsafe fn del(&mut self, ptr: *mut u8, request_size: usize) {
@@ -91,7 +103,9 @@ impl ChunkHeader {
         assert!((*head_ptr).chunk_size - core::mem::size_of::<ChunkHeader>() == request_size);
 
         let mut prev_free_head_ptr = self as *mut ChunkHeader;
-        while (*prev_free_head_ptr).next.is_some() && (*prev_free_head_ptr).next.unwrap() < head_ptr as usize {
+        while (*prev_free_head_ptr).next.is_some()
+            && (*prev_free_head_ptr).next.unwrap() < head_ptr as usize
+        {
             prev_free_head_ptr = (*prev_free_head_ptr).next.unwrap() as *mut ChunkHeader;
         }
         let next_free_head_ptr;
@@ -99,7 +113,7 @@ impl ChunkHeader {
             next_free_head_ptr = (*prev_free_head_ptr).next.unwrap() as *mut ChunkHeader;
         } else {
             // no next free space
-            next_free_head_ptr = 0 as *mut ChunkHeader;  // dummy. maybe unuse.
+            next_free_head_ptr = 0 as *mut ChunkHeader; // dummy. maybe unuse.
         }
 
         //
@@ -110,17 +124,21 @@ impl ChunkHeader {
         // HUU: used chunk
         // H__: free chunk
         //
-        if prev_free_head_ptr as usize + (*prev_free_head_ptr).chunk_size == head_ptr as usize &&
-           ptr as usize + request_size == next_free_head_ptr as usize {
+        if prev_free_head_ptr as usize + (*prev_free_head_ptr).chunk_size == head_ptr as usize
+            && ptr as usize + request_size == next_free_head_ptr as usize
+        {
             //
             // H__HUUH__ ==> H________
             //
             let new_prev_free_head = ChunkHeader {
                 next: (*next_free_head_ptr).next,
-                chunk_size: (*prev_free_head_ptr).chunk_size + (*head_ptr).chunk_size + (*next_free_head_ptr).chunk_size,
+                chunk_size: (*prev_free_head_ptr).chunk_size + (*head_ptr).chunk_size
+                    + (*next_free_head_ptr).chunk_size,
             };
             prev_free_head_ptr.write(new_prev_free_head);
-        } else if prev_free_head_ptr as usize + (*prev_free_head_ptr).chunk_size == head_ptr as usize {
+        } else if prev_free_head_ptr as usize + (*prev_free_head_ptr).chunk_size
+            == head_ptr as usize
+        {
             //
             // H__HUUHUU ==> H_____HUU
             //

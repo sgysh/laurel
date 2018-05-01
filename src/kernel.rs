@@ -1,6 +1,6 @@
+use alloc::boxed::Box;
 use sched;
 use util;
-use alloc::boxed::Box;
 
 pub fn start() {
     unsafe {
@@ -26,7 +26,9 @@ pub fn kernel_start() {
     x = x + *b;
     loop {
         if x % 1000 == 0 {
-            unsafe {sched::task_switch();}
+            unsafe {
+                sched::task_switch();
+            }
         }
         x = x.wrapping_add(1);
     }
