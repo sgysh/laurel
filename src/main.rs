@@ -11,6 +11,7 @@
 
 extern crate alloc;
 
+mod builtin;
 mod chunk;
 mod console;
 mod heap_allocator;
