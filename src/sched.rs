@@ -10,13 +10,18 @@ static mut KERNEL_STACK: [u32; 512] = [0xdeadbeef; 512];
 #[used]
 static mut CONSOLE_STACK: [u32; 1024] = [0xeeeeeeee; 1024];
 
-struct Tcb {
+#[derive(Clone)]
+pub struct Tcb {
+    pub name: &'static str,
     sp: *mut u32,
 }
 
 impl Tcb {
     pub const fn new(p: *mut u32) -> Tcb {
-        Tcb { sp: p }
+        Tcb {
+            name: "<noname>",
+            sp: p,
+        }
     }
 }
 
@@ -27,12 +32,21 @@ static mut TCBS: [Tcb; 2] = [
 
 static mut CURRENT_TCB_INDEX: usize = 0;
 
+pub unsafe fn get_tcb_len() -> usize {
+    TCBS.len()
+}
+
+pub unsafe fn get_tcb(i: usize) -> Tcb {
+    TCBS[i].clone()
+}
+
 pub unsafe fn task_init() {
     KERNEL_STACK[KERNEL_STACK.len() - 1] = 0x01000000; /* xPSR  */
     KERNEL_STACK[KERNEL_STACK.len() - 2] =
         util::align_down(kernel::kernel_start as usize, 2) as u32; /* PC */
     KERNEL_STACK[KERNEL_STACK.len() - 3] = util::align_down(task_finished as usize, 2) as u32; /* LR */
 
+    TCBS[0].name = "ktask";
     let sp = KERNEL_STACK
         .as_ptr()
         .offset(KERNEL_STACK.len() as isize - 8) as *mut u32;
@@ -50,6 +64,7 @@ pub unsafe fn task_init() {
         util::align_down(console::console_handler as usize, 2) as u32; /* PC */
     CONSOLE_STACK[CONSOLE_STACK.len() - 3] = util::align_down(task_finished as usize, 2) as u32; /* LR */
 
+    TCBS[1].name = "console";
     TCBS[1].sp = CONSOLE_STACK
         .as_ptr()
         .offset(CONSOLE_STACK.len() as isize - 16) as *mut u32;
